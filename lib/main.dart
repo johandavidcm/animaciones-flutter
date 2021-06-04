@@ -1,4 +1,4 @@
-import 'package:animations/pages/transform/rotate_animation.dart';
+import 'package:animations/pages/circular_menu.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -8,7 +8,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Animaciones',
-      home: RotateAnimationPage(),
+      home: CircularMenuPage(),
     );
   }
 }
