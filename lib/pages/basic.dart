@@ -12,8 +12,8 @@ class _BasicAnimationsPageState extends State<BasicAnimationsPage>
     with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _counter;
-  late Animation<Color?> _color;
-  bool _isCompleted = false;
+  double _start = 0;
+  double _end = 100;
   @override
   void initState() {
     super.initState();
@@ -21,27 +21,24 @@ class _BasicAnimationsPageState extends State<BasicAnimationsPage>
       duration: Duration(seconds: 3),
       vsync: this,
     );
-    _counter = Tween<double>(begin: 0, end: 100).animate(_controller);
-    _color = TweenSequence([
-      TweenSequenceItem(
-        tween: ColorTween(begin: Colors.yellow, end: Colors.blue),
-        weight: 50,
-      ),
-      TweenSequenceItem(
-        tween: ColorTween(begin: Colors.blue, end: Colors.red),
-        weight: 50,
-      ),
-    ]).animate(_controller);
+    _counter = Tween<double>(begin: _start, end: _end).animate(_controller);
     _counter.addListener(() {
       setState(() {});
-      _isCompleted = _controller.status == AnimationStatus.completed;
     });
+    _controller.forward();
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  _startNewAnimatio() {
+    _start = _end;
+    _end = _end + 100;
+    _counter = Tween<double>(begin: _start, end: _end).animate(_controller);
+    _controller.forward(from: 0);
   }
 
   @override
@@ -58,7 +55,6 @@ class _BasicAnimationsPageState extends State<BasicAnimationsPage>
               _counter.value.toStringAsFixed(2),
               style: TextStyle(
                 fontSize: 40.0,
-                color: _color.value,
               ),
             ),
             SizedBox(
@@ -67,11 +63,7 @@ class _BasicAnimationsPageState extends State<BasicAnimationsPage>
             CupertinoButton(
               child: Text('Start'),
               onPressed: () {
-                if (_isCompleted) {
-                  _controller.reverse();
-                } else {
-                  _controller.forward(from: 0);
-                }
+                _startNewAnimatio();
               },
             )
           ],
