@@ -3,6 +3,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math' as math;
 
+class MenuOption {
+  final String label;
+  final IconData iconData;
+
+  MenuOption({
+    required this.label,
+    required this.iconData,
+  });
+}
+
 class CircularMenuPage extends StatefulWidget {
   const CircularMenuPage({Key? key}) : super(key: key);
 
@@ -10,13 +20,46 @@ class CircularMenuPage extends StatefulWidget {
   _CircularMenuPageState createState() => _CircularMenuPageState();
 }
 
-class _CircularMenuPageState extends State<CircularMenuPage> {
+class _CircularMenuPageState extends State<CircularMenuPage>
+    with TickerProviderStateMixin {
+  List<MenuOption> _options = [];
+
+  late AnimationController _controller;
+  late Animation<double> _animatedAngle;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 500),
+    );
+    _animatedAngle =
+        Tween<double>(begin: -math.pi, end: 0).animate(_controller);
+    _animatedAngle.addListener(() {
+      setState(() {});
+    });
+    _options.add(MenuOption(label: "Camera", iconData: Icons.camera));
+    _options.add(MenuOption(label: "Comments", iconData: Icons.comment));
+    _options
+        .add(MenuOption(label: "Accessibility", iconData: Icons.accessibility));
+    _options.add(MenuOption(label: "Food", iconData: Icons.cake));
+    _options.add(MenuOption(label: "Favorite", iconData: Icons.favorite));
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final decoratorWidth = 0.85 * size.width;
     final outDecoratorWith = decoratorWidth + 130;
-    final int itemsCount = 6;
+    final int itemsCount = _options.length;
     final double step = math.pi / itemsCount;
     return Scaffold(
       body: Container(
@@ -32,39 +75,50 @@ class _CircularMenuPageState extends State<CircularMenuPage> {
                 children: [
                   Positioned(
                     right: -decoratorWidth / 2,
-                    child: SvgPicture.asset(
-                      'assets/decoration.svg',
-                      width: decoratorWidth,
+                    child: Transform.rotate(
+                      angle: _animatedAngle.value,
+                      child: SvgPicture.asset(
+                        'assets/decoration.svg',
+                        width: decoratorWidth,
+                      ),
                     ),
                   ),
                   Positioned(
                     right: -outDecoratorWith / 2,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Container(
-                          width: outDecoratorWith,
-                          height: outDecoratorWith,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border:
-                                Border.all(width: 2, color: Colors.redAccent),
+                    child: Transform.rotate(
+                      angle: _animatedAngle.value,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            width: outDecoratorWith,
+                            height: outDecoratorWith,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border:
+                                  Border.all(width: 2, color: Colors.redAccent),
+                            ),
                           ),
-                        ),
-                        ...List.generate(
-                          itemsCount,
-                          (int index) {
-                            final angle =
-                                (math.pi / 2 + index * step) + (step / 2);
-                            return MenuItem(
-                              offset: Offset(
-                                outDecoratorWith / 2 * math.cos(angle),
-                                outDecoratorWith / 2 * math.sin(angle),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+                          ...List.generate(
+                            itemsCount,
+                            (int index) {
+                              final angle =
+                                  (math.pi / 2 + index * step) + (step / 2);
+                              return MenuItem(
+                                offset: Offset(
+                                  outDecoratorWith / 2 * math.cos(angle),
+                                  outDecoratorWith / 2 * math.sin(angle),
+                                ),
+                                textOffset: Offset(
+                                  -100,
+                                  10.0 - (30 * (index / itemsCount)),
+                                ),
+                                option: _options[index],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -82,27 +136,41 @@ class _CircularMenuPageState extends State<CircularMenuPage> {
 }
 
 class MenuItem extends StatelessWidget {
-  final Offset offset;
-
-  const MenuItem({Key? key, required this.offset}) : super(key: key);
+  final Offset offset, textOffset;
+  final MenuOption option;
+  const MenuItem({
+    Key? key,
+    required this.offset,
+    required this.textOffset,
+    required this.option,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Transform.translate(
       offset: offset,
       child: Stack(
+        alignment: Alignment.center,
         children: [
           Transform.translate(
-            offset: Offset(
-              -50,
-              0,
-            ),
-            child: Text('Label'),
+            offset: textOffset,
+            child: SizedBox(
+                width: 100.0,
+                child: Text(
+                  option.label,
+                  textAlign: TextAlign.right,
+                )),
           ),
           CupertinoButton(
             child: Container(
               height: 50,
               width: 50,
+              child: Center(
+                child: Icon(
+                  option.iconData,
+                  color: Colors.white,
+                ),
+              ),
               decoration: BoxDecoration(
                 color: Colors.redAccent,
                 shape: BoxShape.circle,
